@@ -1,0 +1,113 @@
+# --- Git ---
+.git
+.gitignore
+.gitattributes
+.github/
+
+# --- Secrets & configs ---
+*.pem
+*.key
+*.crt
+*.env
+.env.*
+secrets/
+config/
+
+# --- Build artifacts ---
+*.tar.gz
+*.exe
+src/pepecoin
+src/pepecoind
+src/pepecoin-cli
+src/pepecoin-tx
+src/test/test_pepecoin
+src/test/test_pepecoin_fuzzy
+src/qt/test/test_pepecoin-qt
+src/bench/bench_pepecoin
+
+# autoreconf
+Makefile.in
+aclocal.m4
+autom4te.cache/
+build-aux/
+config.log
+config.status
+configure
+libtool
+src/config/bitcoin-config.h
+src/config/bitcoin-config.h.in
+src/config/stamp-h1
+
+# Generated
+src/univalue/gen
+src/qt/*.moc
+src/qt/moc_*.cpp
+src/qt/forms/ui_*.h
+src/qt/test/moc*.cpp
+
+# Object files & binaries
+.deps
+.dirstamp
+.libs
+*.swp
+*.*~*
+*.bak
+*.rej
+*.orig
+*.pyc
+*.o
+*.o-*
+*.a
+*.pb.cc
+*.pb.h
+*.log
+*.trs
+*.dmg
+*.json.h
+*.raw.h
+*.lo
+*.la
+
+# Qt / Makefiles / App bundles
+*.qm
+Makefile
+pepecoin-qt
+Bitcoin-Qt.app
+Makefile.test
+pepecoin-qt_test
+src/test/buildenv.py
+qrc_*.cpp
+
+# Coverage
+*.gcno
+*.gcda
+/*.info
+test_bitcoin.coverage/
+total.coverage/
+coverage_percent.txt
+
+# Build dirs
+build
+linux-coverage-build
+linux-build
+win32-build
+qa/cache/*
+
+# IDE / editor
+.idea/
+.vscode/*
+*.iws
+*.iml
+*.ipr
+.DS_Store
+
+# Snapcraft
+parts/
+prime/
+stage/
+*.snap
+
+# Extra caches
+ccache/
+.cache/
+tmp/
