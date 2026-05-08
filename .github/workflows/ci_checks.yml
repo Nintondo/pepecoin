@@ -1,0 +1,63 @@
+name: CI Checks
+
+on:
+  workflow_dispatch:
+    inputs:
+      sha:
+        description: 'Commit SHA for checks (default: latest in branch)'
+        required: false
+        default: ''
+  pull_request:
+    branches:
+      - master
+      - main
+  push:
+    branches:
+      - master
+      - main
+
+jobs:
+  semgrep-ci:
+    runs-on: self-hosted
+    permissions:
+      contents: read
+
+    steps:
+      - name: Determine commit SHA
+        shell: bash
+        env:
+          INPUT_SHA: ${{ github.event.inputs.sha }}
+          GITHUB_SHA_REF: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [ -n "$INPUT_SHA" ]; then
+            echo "SCAN_REF=$INPUT_SHA" >> "$GITHUB_ENV"
+          else
+            echo "SCAN_REF=$GITHUB_SHA_REF" >> "$GITHUB_ENV"
+          fi
+
+      - name: Checkout repository at selected commit
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ env.SCAN_REF }}
+
+      - name: Install Semgrep
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          sudo apt-get update
+          sudo apt-get install -y python3-pip pipx
+          pipx ensurepath
+          pipx install semgrep || pipx upgrade semgrep
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Report all (non-blocking)
+        continue-on-error: true
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          semgrep --config p/ci .
+

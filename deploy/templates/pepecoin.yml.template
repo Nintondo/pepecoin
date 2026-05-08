@@ -1,0 +1,23 @@
+version: "3.9"
+
+services:
+  ${COMPOSE_SERVICE}:
+    image: ${CI_REGISTRY}/${CI_REGISTRY_REPO}/${SERVICE_NAME}:${SERVICE_TAG}
+    container_name: ${COMPOSE_SERVICE}
+    restart: always
+    volumes:
+      - ./data/pepecoin.conf:/app/data/pepecoin.conf:ro
+      - ./data/node:/app/data/node:rw
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+    ports:
+      - "${PEPECOIN_P2P_PORT}:${PEPECOIN_P2P_PORT}"
+    expose:
+      - "${PEPECOIN_RPC_PORT}"
+    command: ["/app/pepecoind", "-datadir=/app/data/node", "-conf=/app/data/pepecoin.conf", "-printtoconsole"${PEPECOIN_COMMAND_ARGS}]
+    stop_grace_period: 10m
+
