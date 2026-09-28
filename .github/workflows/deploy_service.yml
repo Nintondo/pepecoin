@@ -167,6 +167,7 @@ jobs:
           network: ${{ vars.NETWORK }}
           compose_service: ${{ vars.COMPOSE_SERVICE }}
           health_timeout_seconds: "600"
+          public_health_url: ${{ vars.PUBLIC_HEALTH_URL }}
           reload_nginx: "false"
 
       - name: Docker logout
