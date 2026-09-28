@@ -129,8 +129,8 @@ jobs:
           fi
 
           mkdir -p .render
-          envsubst < deploy/templates/pepecoin.yml.template > .render/pepecoin.yml
-          envsubst < deploy/templates/pepecoin.conf.template > .render/pepecoin.conf
+          envsubst < deploy/templates/pepecoin.yml.template > .render/pepecoin.yml.updated
+          envsubst < deploy/templates/pepecoin.conf.template > .render/pepecoin.conf.updated
 
       - name: Copy compose file to server
         uses: appleboy/scp-action@v1.0.0
@@ -138,7 +138,7 @@ jobs:
           host: ${{ secrets.HOST_1 }}
           username: ${{ secrets.HOST_1_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".render/pepecoin.yml"
+          source: ".render/pepecoin.yml.updated"
           target: "/opt/${{ vars.COIN }}-${{ vars.NETWORK }}/services/${{ vars.SERVICE_NAME }}"
           strip_components: 1
 
@@ -148,7 +148,7 @@ jobs:
           host: ${{ secrets.HOST_1 }}
           username: ${{ secrets.HOST_1_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".render/pepecoin.conf"
+          source: ".render/pepecoin.conf.updated"
           target: "/opt/${{ vars.COIN }}-${{ vars.NETWORK }}/services/${{ vars.SERVICE_NAME }}/data"
           strip_components: 1
 
@@ -166,8 +166,8 @@ jobs:
           coin: ${{ vars.COIN }}
           network: ${{ vars.NETWORK }}
           compose_service: ${{ vars.COMPOSE_SERVICE }}
-          post_deploy_sleep_seconds: "10"
-          reload_nginx: "true"
+          health_timeout_seconds: "600"
+          reload_nginx: "false"
 
       - name: Docker logout
         if: always()

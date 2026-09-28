@@ -28,6 +28,7 @@ on:
       - 'src/**'
       - 'depends/**'
       - 'entrypoint.sh'
+      - 'healthcheck.sh'
       - 'Dockerfile'
 
 concurrency:

@@ -58,7 +58,10 @@ WORKDIR /app
 
 COPY --from=builder /build/opt/pepecoin/bin/ /app/
 COPY entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+COPY healthcheck.sh /healthcheck.sh
+RUN chmod +x /entrypoint.sh /healthcheck.sh
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 CMD ["/healthcheck.sh"]
 
 EXPOSE 19918
 
