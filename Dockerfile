@@ -19,7 +19,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-RUN curl -o pepecoin.tar.gz -Lk "https://github.com/pepecoinppc/pepecoin/archive/refs/tags/v${VERSION_PEPE}.tar.gz" && \
+RUN curl --fail --location -o pepecoin.tar.gz "https://github.com/pepecoinppc/pepecoin/archive/refs/tags/v${VERSION_PEPE}.tar.gz" && \
     tar -xf pepecoin.tar.gz && \
     mv pepecoin-${VERSION_PEPE}/* ./ && \
     rm -rf pepecoin-${VERSION_PEPE} && \
@@ -28,10 +28,10 @@ RUN curl -o pepecoin.tar.gz -Lk "https://github.com/pepecoinppc/pepecoin/archive
 RUN if [ "${BUILD_JOBS}" = "0" ] || [ -z "${BUILD_JOBS}" ]; then BUILD_JOBS="$(nproc)"; fi && \
     ln -snf /usr/share/zoneinfo/Etc/UTC /etc/localtime && echo Etc/UTC > /etc/timezone && \
     ccache --max-size=100M && \
-    make -j"${BUILD_JOBS}" -C depends HOST=x86_64-unknown-linux-gnu && \
+    make -j"${BUILD_JOBS}" -C depends HOST=x86_64-unknown-linux-gnu NO_QT=1 && \
     ./autogen.sh && \
     CONFIG_SITE="$PWD/depends/x86_64-unknown-linux-gnu/share/config.site" \
-    ./configure --prefix="${PREFIX}" --enable-glibc-back-compat --enable-zmq \
+    ./configure --prefix="${PREFIX}" --without-gui --enable-glibc-back-compat --enable-zmq \
       --enable-reduce-exports --enable-c++14 LDFLAGS=-static-libstdc++ && \
     make -j"${BUILD_JOBS}" && \
     if [ "${RUN_TESTS}" = "1" ]; then make -j"${BUILD_JOBS}" check VERBOSE=1; fi && \
