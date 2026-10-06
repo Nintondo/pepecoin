@@ -30,6 +30,12 @@ run's files. If SSH is interrupted before confirmation, the pending transaction
 remains available for this recovery. Database migrations are not downgraded;
 release schema changes must remain compatible with the previous application.
 
+Node Compose templates define an explicit CLI RPC healthcheck using the same
+network, data directory and config as the daemon. It also works with the current
+Bells image without rebuilding that pinned node version. Image HEALTHCHECK remains
+available for standalone containers. Health status alone does not restart a
+running container; the deployment action waits for health and recovers on failure.
+
 New images must have Docker HEALTHCHECK. Existing legacy images may lack it:
 node recovery verifies RPC using the shipped CLI; frontend recovery verifies
 its existing readiness endpoint; other applications verify their listening

@@ -132,6 +132,8 @@ jobs:
           fi
 
           mkdir -p .render
+          PEPECOIN_HEALTH_ARGS=$(python3 .github/scripts/node-health-args.py)
+          export PEPECOIN_HEALTH_ARGS
           envsubst < deploy/templates/pepecoin.yml.template > .render/pepecoin.yml.updated
           envsubst < deploy/templates/pepecoin.conf.template > .render/pepecoin.conf.updated
 
@@ -182,4 +184,3 @@ jobs:
           set +e
           docker logout "$CI_REGISTRY"
           exit 0
-

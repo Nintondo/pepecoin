@@ -29,6 +29,8 @@ jobs:
           actionlint
           bash -n .github/actions/deploy-over-ssh/deploy.sh
           shellcheck .github/actions/deploy-over-ssh/deploy.sh
+      - name: Validate node Compose health for mainnet, testnet and regtest
+        run: python3 .github/tests/test_node_template.py -v
       - name: Test deployment failure and recovery contracts
         run: python3 .github/tests/test_deploy.py -v
       - name: Test real Compose includes, health and legacy recovery
