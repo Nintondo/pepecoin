@@ -134,7 +134,9 @@ jobs:
           mkdir -p .render
           PEPECOIN_HEALTH_ARGS=$(python3 .github/scripts/node-health-args.py)
           export PEPECOIN_HEALTH_ARGS
+          umask 077
           envsubst < deploy/templates/pepecoin.yml.template > .render/pepecoin.yml.updated
+          umask 077
           envsubst < deploy/templates/pepecoin.conf.template > .render/pepecoin.conf.updated
 
       - name: Copy compose file to server
@@ -144,7 +146,7 @@ jobs:
           username: ${{ secrets.HOST_1_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: ".render/pepecoin.yml.updated"
-          target: "/opt/${{ vars.COIN }}-${{ vars.NETWORK }}/services/${{ vars.SERVICE_NAME }}"
+          target: "${{ vars.SERVICE_DIR_1 || format('/opt/{0}-{1}/services/{2}', vars.COIN, vars.NETWORK, vars.SERVICE_NAME) }}"
           strip_components: 1
 
       - name: Copy pepecoin config to server
@@ -154,7 +156,7 @@ jobs:
           username: ${{ secrets.HOST_1_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           source: ".render/pepecoin.conf.updated"
-          target: "/opt/${{ vars.COIN }}-${{ vars.NETWORK }}/services/${{ vars.SERVICE_NAME }}/data"
+          target: "${{ vars.SERVICE_DIR_1 || format('/opt/{0}-{1}/services/{2}', vars.COIN, vars.NETWORK, vars.SERVICE_NAME) }}/data"
           strip_components: 1
 
       - name: Deploy service
@@ -168,6 +170,9 @@ jobs:
           service_name: ${{ vars.SERVICE_NAME }}
           service_tag: ${{ env.SERVICE_TAG }}
           docker_compose_file: ${{ vars.DOCKER_COMPOSE_FILE }}
+          base_path: ${{ vars.BASE_PATH }}
+          compose_project_name: ${{ vars.COMPOSE_PROJECT_NAME }}
+          service_path: ${{ vars.SERVICE_DIR_1 }}
           coin: ${{ vars.COIN }}
           network: ${{ vars.NETWORK }}
           compose_service: ${{ vars.COMPOSE_SERVICE }}
