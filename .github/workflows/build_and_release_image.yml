@@ -24,14 +24,9 @@ on:
     branches:
       - master
       - main
-    paths:
-      - 'src/**'
-      - 'depends/**'
-      - 'entrypoint.sh'
-      - 'Dockerfile'
 
 concurrency:
-  group: build-${{ github.ref }}
+  group: build-${{ github.event.inputs.sha || github.sha }}
   cancel-in-progress: false
 
 jobs:
@@ -53,7 +48,7 @@ jobs:
           fi
 
       - name: Checkout repository at selected commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ env.SCAN_REF }}
 
@@ -121,7 +116,7 @@ jobs:
           echo "Building image with SHA ${{ env.SERVICE_TAG }}"
 
       - name: Checkout repository at selected commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ env.SERVICE_TAG }}
 
@@ -151,6 +146,26 @@ jobs:
           set -euo pipefail
 
           IMAGE="${CI_REGISTRY}/${CI_REGISTRY_REPO}/${SERVICE_NAME}"
+          verify_image() {
+            [ "$(docker image inspect -f '{{if .Config.Healthcheck}}present{{end}}' "${IMAGE}:${SERVICE_TAG}")" = present ]
+            [ "$(docker image inspect -f '{{index .Config.Labels "org.opencontainers.image.revision"}}' "${IMAGE}:${SERVICE_TAG}")" = "${SERVICE_TAG}" ]
+            docker run --rm --entrypoint /app/pepecoind "${IMAGE}:${SERVICE_TAG}" --version >/dev/null
+            docker run --rm --entrypoint /app/pepecoin-cli "${IMAGE}:${SERVICE_TAG}" --version >/dev/null
+          }
+          manifest_error="$(mktemp)"
+          if docker manifest inspect "${IMAGE}:${SERVICE_TAG}" >/dev/null 2>"${manifest_error}"; then
+            rm -f "${manifest_error}"
+            echo "Reusing the existing SHA image; commit tags are never overwritten."
+            docker pull --quiet "${IMAGE}:${SERVICE_TAG}"
+            verify_image
+            exit 0
+          fi
+          if ! grep -qiE "manifest unknown|no such manifest" "${manifest_error}"; then
+            cat "${manifest_error}" >&2
+            rm -f "${manifest_error}"
+            exit 1
+          fi
+          rm -f "${manifest_error}"
           docker build \
             --no-cache \
             --pull \
@@ -161,10 +176,9 @@ jobs:
             --label "org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}" \
             -f ./Dockerfile \
             -t "${IMAGE}:${SERVICE_TAG}" \
-            -t "${IMAGE}:latest" \
             ./
+          verify_image
           docker push "${IMAGE}:${SERVICE_TAG}"
-          docker push "${IMAGE}:latest"
 
       - name: Docker logout
         if: always()

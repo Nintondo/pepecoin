@@ -1,0 +1,32 @@
+[
+  {
+    "env": {
+      "CI_REGISTRY": "registry.example",
+      "CI_REGISTRY_REPO": "project",
+      "SERVICE_NAME": "pepecoin",
+      "SERVICE_TAG": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "DOCKER_COMPOSE_FILE": "pepecoin.yml",
+      "COIN": "pepe",
+      "NETWORK": "mainnet",
+      "COMPOSE_SERVICE": "pepecoin-mainnet",
+      "IMAGE_NAME_OVERRIDE": "pepecoin",
+      "HEALTH_TIMEOUT_SECONDS": "600",
+      "RELOAD_NGINX": "true",
+      "DEPLOYMENT_ID": "${{ steps.transaction.outputs.id }}",
+      "DEPLOY_PHASE": "deploy",
+      "SERVICE_ENVIRONMENT": "testnet"
+    },
+    "base_path": "/opt/pepe-mainnet",
+    "service_path": "/opt/pepe-mainnet/services/pepecoin",
+    "root_compose": "/opt/pepe-mainnet/docker-compose.yml",
+    "compose_service": "pepecoin-mainnet",
+    "compose_file": "pepecoin.yml",
+    "files": [
+      "data/pepecoin.conf"
+    ],
+    "staged_files": [
+      "data/pepecoin.conf.updated",
+      "pepecoin.yml.updated"
+    ]
+  }
+]

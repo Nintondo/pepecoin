@@ -20,4 +20,9 @@ services:
       - "${PEPECOIN_RPC_PORT}"
     command: ["/app/pepecoind", "-datadir=/app/data/node", "-conf=/app/data/pepecoin.conf", "-printtoconsole"${PEPECOIN_COMMAND_ARGS}]
     stop_grace_period: 10m
-
+    healthcheck:
+      test: ["CMD", "timeout", "8", "/app/pepecoin-cli", "-datadir=/app/data/node", "-conf=/app/data/pepecoin.conf"${PEPECOIN_HEALTH_ARGS}, "getnetworkinfo"]
+      interval: 30s
+      timeout: 10s
+      start_period: 120s
+      retries: 3

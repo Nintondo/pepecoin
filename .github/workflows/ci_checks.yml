@@ -18,7 +18,7 @@ on:
 
 jobs:
   semgrep-ci:
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
@@ -38,7 +38,7 @@ jobs:
           fi
 
       - name: Checkout repository at selected commit
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ env.SCAN_REF }}
 

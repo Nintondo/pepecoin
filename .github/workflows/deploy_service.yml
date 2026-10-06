@@ -69,7 +69,10 @@ jobs:
           fi
 
       - name: Checkout repository for local actions
-        uses: actions/checkout@v5
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          ref: ${{ github.workflow_sha }}
+          persist-credentials: false
 
       - name: Resolve SERVICE_TAG
         uses: ./.github/actions/resolve-service-tag
@@ -129,26 +132,28 @@ jobs:
           fi
 
           mkdir -p .render
-          envsubst < deploy/templates/pepecoin.yml.template > .render/pepecoin.yml
-          envsubst < deploy/templates/pepecoin.conf.template > .render/pepecoin.conf
+          PEPECOIN_HEALTH_ARGS=$(python3 .github/scripts/node-health-args.py)
+          export PEPECOIN_HEALTH_ARGS
+          envsubst < deploy/templates/pepecoin.yml.template > .render/pepecoin.yml.updated
+          envsubst < deploy/templates/pepecoin.conf.template > .render/pepecoin.conf.updated
 
       - name: Copy compose file to server
-        uses: appleboy/scp-action@v1.0.0
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ secrets.HOST_1 }}
           username: ${{ secrets.HOST_1_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".render/pepecoin.yml"
+          source: ".render/pepecoin.yml.updated"
           target: "/opt/${{ vars.COIN }}-${{ vars.NETWORK }}/services/${{ vars.SERVICE_NAME }}"
           strip_components: 1
 
       - name: Copy pepecoin config to server
-        uses: appleboy/scp-action@v1.0.0
+        uses: appleboy/scp-action@ff85246acaad7bdce478db94a363cd2bf7c90345 # v1.0.0
         with:
           host: ${{ secrets.HOST_1 }}
           username: ${{ secrets.HOST_1_USERNAME }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          source: ".render/pepecoin.conf"
+          source: ".render/pepecoin.conf.updated"
           target: "/opt/${{ vars.COIN }}-${{ vars.NETWORK }}/services/${{ vars.SERVICE_NAME }}/data"
           strip_components: 1
 
@@ -166,8 +171,9 @@ jobs:
           coin: ${{ vars.COIN }}
           network: ${{ vars.NETWORK }}
           compose_service: ${{ vars.COMPOSE_SERVICE }}
-          post_deploy_sleep_seconds: "10"
-          reload_nginx: "true"
+          health_timeout_seconds: "600"
+          public_health_url: ${{ vars.PUBLIC_HEALTH_URL }}
+          reload_nginx: "false"
 
       - name: Docker logout
         if: always()
@@ -178,4 +184,3 @@ jobs:
           set +e
           docker logout "$CI_REGISTRY"
           exit 0
-
