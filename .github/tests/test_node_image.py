@@ -27,7 +27,11 @@ def main():
         password=uuid.uuid4().hex
         (data/(COIN+'.conf')).write_text('server=1\nregtest=1\nlisten=0\ndnsseed=0\ndiscover=0\nrpcuser=fixture\nrpcpassword='+password+'\n')
         try:
-            run('docker','run','-d','--name',container,'--health-cmd',shlex.join(compose_probe),'--health-interval','2s','--health-timeout','10s','--health-start-period','0s','--health-retries','3','--mount',f'type=bind,source={data},target=/app/data',os.environ['CI_TEST_IMAGE'],f'/app/{DAEMON}','-regtest','-datadir=/app/data/node',f'-conf=/app/data/{COIN}.conf',stdout=subprocess.DEVNULL)
+            run('docker','create','--name',container,'--health-cmd',shlex.join(compose_probe),'--health-interval','2s','--health-timeout','10s','--health-start-period','0s','--health-retries','3','--mount','type=volume,target=/app/data',os.environ['CI_TEST_IMAGE'],f'/app/{DAEMON}','-regtest','-datadir=/app/data/node',f'-conf=/app/data/{COIN}.conf',stdout=subprocess.DEVNULL)
+            # Docker may run outside the runner container. Transfer fixture data
+            # through the API into an anonymous test volume; no host bind paths.
+            run('docker','cp',str(data)+ '/.',container+':/app/data')
+            run('docker','start',container,stdout=subprocess.DEVNULL)
             for _ in range(60):
                 p=subprocess.run(['docker','exec',container,'/healthcheck.sh'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
                 status=run('docker','inspect','-f','{{.State.Health.Status}}',container,capture_output=True).stdout.strip()
@@ -40,8 +44,7 @@ def main():
         finally:
             # No production chain, volumes, registry credentials or exposed ports.
             subprocess.run(['docker','stop','-t','30',container],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-            subprocess.run(['docker','rm','-f',container],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
-            # Entrypoint changes ownership of bind-mounted test data to UID 1001.
-            subprocess.run(['sudo','chown','-R',str(os.getuid()),str(data)],check=True)
+            subprocess.run(['docker','rm','-fv',container],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+            # -v removes only the disposable container's anonymous test volume.
 
 if __name__=='__main__':main()
